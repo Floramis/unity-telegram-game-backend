@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "244852574761",
+    "project_id": "floramismobileapp",
+    "storage_bucket": "floramismobileapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244852574761:android:a804a86e663b885bb86a38",
+        "android_client_info": {
+          "package_name": "com.Floramis.Floramis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "244852574761-g868hd905hr2qrdb06n7ppv45kdb7m0d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCnRqlBoGulBGP4-Rw9v_HA-6thtujErtg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "244852574761-g868hd905hr2qrdb06n7ppv45kdb7m0d.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "244852574761-cgbminq1ecn7uut6d5ldab5vchupmt82.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.Floramis.Floramis"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

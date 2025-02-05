@@ -3,13 +3,13 @@ const express = require("express");
 const path = require("path");
 const TelegramBot = require("node-telegram-bot-api");
 
-const gameName = "YOUR_GAME_NAME_GOES_HERE";
-const webURL = "www.YOUR_URL.com";
+const gameName = "jumpingjuniper";
+const webURL = "www.jumpingjuniper.floramis.com";
 
 const server = express();
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 6100;
 
 const SCORE_TOKEN = process.env.SCORE_TOKEN.split(";").map((t) => BigInt(t));
 
@@ -31,7 +31,7 @@ function addAllNumbers(number) {
 bot.onText(/\/help/, (msg) =>
   bot.sendMessage(
     msg.from.id,
-    "This bot implements a simple game. Say /game if you want to play."
+    "This bot implements a simple game called Jumping Juniper. Say /game if you want to play."
   )
 );
 bot.onText(/\/start|\/game/, (msg) => bot.sendGame(msg.from.id, gameName));
@@ -43,10 +43,26 @@ bot.on("callback_query", function (query) {
     );
   } else {
     queries[query.id] = query;
-    const gameurl = `https://${webURL}/index.html?id=${query.id}`;
-    bot.answerCallbackQuery(query.id, { url: gameurl });
+
+    // Fetch the user's all-time high score from Telegram
+    bot.getGameHighScores(query.from.id)
+    .then(scores => {
+        const userScore = scores.length > 0 ? scores[0].score : 0;
+        const gameUrl = `https://${webURL}/index.html?id=${query.id}&highscore=${userScore}`;
+        bot.answerCallbackQuery(query.id, { url: gameUrl });
+    })
+    .catch(err => {
+        console.error("Failed to get high score:", err);
+        const gameUrl = `https://${webURL}/index.html?id=${query.id}&highscore=0`;
+        bot.answerCallbackQuery(query.id, { url: gameUrl });
+    });
   }
 });
+
+// bot.getGameHighScores(query.from.id, { chat_id: query.message.chat.id, message_id: query.message.message_id })
+
+// bot.getGameHighScores(query.from.id, { inline_message_id: query.inline_message_id })
+
 bot.on("inline_query", function (iq) {
   bot.answerInlineQuery(iq.id, [
     { type: "game", id: "0", game_short_name: gameName },
@@ -78,11 +94,13 @@ server.get("/highscore/:score", function (req, res, next) {
   // Change this part if you want to use your own obfuscation method
   const obfuscatedScore = BigInt(req.params.score);
 
-  const realScore = Math.round(Number(obfuscatedScore / token));
+  const receivedScore = Math.round(Number(obfuscatedScore / token));
 
   // If the score is valid
-  if (BigInt(realScore) * token == obfuscatedScore) {
+  if (BigInt(receivedScore) * token == obfuscatedScore) {
     // ===== Obfuscation decoding ends =====
+    const realScore = receivedScore / 100.0;    // Get real score of player with decimal points
+    console.log("player : " + query.from.id + " achieved score: " + realScore);
     bot
       .setGameScore(query.from.id, realScore, options)
       .then((b) => {

@@ -1,0 +1,22 @@
+name: telegram-jumping-juniper-backend
+
+services:
+  nodeapp:
+    container_name: junpingjuniper-node-app
+    build: .
+    expose:
+      - 6100
+    ports:
+      - "6100:6100"
+    env_file:
+      - .env
+    environment:
+      - VIRTUAL_HOST=jumpingjuniper.floramis.com,www.jumpingjuniper.floramis.com
+      - VIRTUAL_PORT=6100
+    restart: unless-stopped
+    networks:
+      - nginx-common_default
+
+networks:
+  nginx-common_default:
+    external: true
