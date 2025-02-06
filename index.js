@@ -44,24 +44,41 @@ bot.on("callback_query", function (query) {
   } else {
     queries[query.id] = query;
 
+    // Determine whether the game was sent as an inline message or in a chat and get game score params based off that
+    const isInlineMessage = !!query.inline_message_id;
+    const gameScoreParams = isInlineMessage
+      ? { inline_message_id: query.inline_message_id }
+      : query.message?.chat?.id && query.message?.message_id
+        ? { chat_id: query.message.chat.id, message_id: query.message.message_id }
+        : null;
+      
+    // Failed to determine correct parameters for getGameHighScores - just return highscore as 0 
+    if (!gameScoreParams) {
+      console.log("Failed to get highscore for player " + query.from.id);
+      const gameUrl = `https://${webURL}/index.html?id=${query.id}&highscore=0`;
+      bot.answerCallbackQuery(query.id, { url: gameUrl });
+      return;
+    }
+
     // Fetch the user's all-time high score from Telegram
-    bot.getGameHighScores(query.from.id)
-    .then(scores => {
-        const userScore = scores.length > 0 ? scores[0].score : 0;
-        const gameUrl = `https://${webURL}/index.html?id=${query.id}&highscore=${userScore}`;
+    bot.getGameHighScores(query.from.id, gameScoreParams)
+      .then(scores => {
+        const userScore = scores.length > 0 ? scores[0].score : 0;    
+
+        console.log(`Got player ${query.from.id}'s highscore from ${isInlineMessage ? "inline message" : "chat message"} case, highscore: ${userScore}`)
+        
+        // User's score has to be multipled by 100 as scores are divided by 100 when stored in telegram leaderboard 
+        // to get real score with decimal points, whereas scores are sent as long integers (See IObfuscation class in unity project)
+        const gameUrl = `https://${webURL}/index.html?id=${query.id}&highscore=${userScore * 100}`; 
         bot.answerCallbackQuery(query.id, { url: gameUrl });
-    })
-    .catch(err => {
+      })
+      .catch(err => {
         console.error("Failed to get high score:", err);
         const gameUrl = `https://${webURL}/index.html?id=${query.id}&highscore=0`;
         bot.answerCallbackQuery(query.id, { url: gameUrl });
-    });
+      });
   }
 });
-
-// bot.getGameHighScores(query.from.id, { chat_id: query.message.chat.id, message_id: query.message.message_id })
-
-// bot.getGameHighScores(query.from.id, { inline_message_id: query.inline_message_id })
 
 bot.on("inline_query", function (iq) {
   bot.answerInlineQuery(iq.id, [
