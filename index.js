@@ -44,6 +44,11 @@ bot.on("callback_query", function (query) {
   } else {
     queries[query.id] = query;
 
+    // Get player details
+    const playerName = `${query.from.first_name || ""} ${query.from.last_name || ""}`.trim();
+
+    const isBot = query.from.is_bot ? "Yes" : "No";
+
     // Determine whether the game was sent as an inline message or in a chat and get game score params based off that
     const isInlineMessage = !!query.inline_message_id;
     const gameScoreParams = isInlineMessage
@@ -51,7 +56,7 @@ bot.on("callback_query", function (query) {
       : query.message?.chat?.id && query.message?.message_id
         ? { chat_id: query.message.chat.id, message_id: query.message.message_id }
         : null;
-      
+    
     // Failed to determine correct parameters for getGameHighScores - just return highscore as 0 
     if (!gameScoreParams) {
       console.log("Failed to get highscore for player " + query.from.id);
@@ -60,10 +65,11 @@ bot.on("callback_query", function (query) {
       return;
     }
 
-    // Fetch the user's all-time high score from Telegram
+    // Fetches score of the specified user and several of their neighbors in a game
     bot.getGameHighScores(query.from.id, gameScoreParams)
       .then(scores => {
-        const userScore = scores.length > 0 ? scores[0].score : 0;    
+        // Filter to only retrieve the user's score (if any)
+        const userScore = scores.find(s => s.user.id === query.from.id)?.score || 0;
 
         console.log(`Got player ${query.from.id}'s highscore from ${isInlineMessage ? "inline message" : "chat message"} case, highscore: ${userScore}`)
         
@@ -94,18 +100,10 @@ server.get("/highscore/:score", function (req, res, next) {
   const token = SCORE_TOKEN[addAllNumbers(BigInt(req.query.id)) - 1];
 
   let query = queries[req.query.id];
-
-  let options;
-  if (query.message) {
-    options = {
-      chat_id: query.message.chat.id,
-      message_id: query.message.message_id,
-    };
-  } else {
-    options = {
-      inline_message_id: query.inline_message_id,
-    };
-  }
+  
+  const gameScoreParams = query.inline_message_id
+    ? { inline_message_id: query.inline_message_id }
+    : { chat_id: query.message.chat.id, message_id: query.message.message_id }
 
   // ===== Obfuscation decoding starts =====
   // Change this part if you want to use your own obfuscation method
@@ -117,9 +115,9 @@ server.get("/highscore/:score", function (req, res, next) {
   if (BigInt(receivedScore) * token == obfuscatedScore) {
     // ===== Obfuscation decoding ends =====
     const realScore = receivedScore / 100.0;    // Get real score of player with decimal points
-    console.log("player : " + query.from.id + " achieved score: " + realScore);
+    console.log("player : " + query.from.id + " achieved new highscore: " + realScore);
     bot
-      .setGameScore(query.from.id, realScore, options)
+      .setGameScore(query.from.id, realScore, gameScoreParams)
       .then((b) => {
         return res.status(200).send("Score added successfully");
       })
