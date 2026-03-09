@@ -5,7 +5,7 @@ const TelegramBot = require("node-telegram-bot-api");
 const { callApi } = require('./api.js');
 
 const gameName = "jumpingjuniper";
-const webURL = "www.jumpingjuniper.floramis.com";
+const webURL = "jumpingjuniper.floramis.com";
 
 const server = express();
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });

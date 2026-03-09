@@ -8,6 +8,8 @@ services:
       - 6100
     ports:
       - "6100:6100"
+    extra_hosts:
+      - "jumpingjuniper.floramis.com:192.168.18.143"
     env_file:
       - .env
     environment:
