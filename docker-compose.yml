@@ -13,7 +13,7 @@ services:
     env_file:
       - .env
     environment:
-      - VIRTUAL_HOST=jumpingjuniper.floramis.com,www.jumpingjuniper.floramis.com
+      - VIRTUAL_HOST=jumpingjuniper.floramis.com
       - VIRTUAL_PORT=6100
     restart: unless-stopped
     networks:
